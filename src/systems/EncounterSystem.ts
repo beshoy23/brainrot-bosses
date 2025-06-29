@@ -455,10 +455,6 @@ export class EncounterSystem {
     }
   }
 
-  getActiveEnemies(): Enemy[] {
-    return Array.from(this.activeEnemies.values()).filter(enemy => enemy.sprite.active);
-  }
-
   getCurrentZone(): GameZone | null {
     return this.currentZone;
   }
