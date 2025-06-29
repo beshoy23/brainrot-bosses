@@ -6,28 +6,28 @@ const STATIC_CACHE_NAME = 'kick-brawler-static-v1';
 
 // Essential files for the game to work offline
 const ESSENTIAL_FILES = [
-  '/brainrot-survivors/',
-  '/brainrot-survivors/index.html',
-  '/brainrot-survivors/src/main.ts',
-  '/brainrot-survivors/patapim.png',
-  '/brainrot-survivors/patapim-idle.png', 
-  '/brainrot-survivors/patapim-run.png',
-  '/brainrot-survivors/patapim-attack.png',
-  '/brainrot-survivors/brbrattack1.png'
+  '/brainrot-bosses/',
+  '/brainrot-bosses/index.html',
+  '/brainrot-bosses/src/main.ts',
+  '/brainrot-bosses/patapim.png',
+  '/brainrot-bosses/patapim-idle.png', 
+  '/brainrot-bosses/patapim-run.png',
+  '/brainrot-bosses/patapim-attack.png',
+  '/brainrot-bosses/brbrattack1.png'
 ];
 
 // Game assets that enhance experience but aren't critical
 const GAME_ASSETS = [
-  '/brainrot-survivors/zombie-male-idle.png',
-  '/brainrot-survivors/zombie-female-idle.png',
-  '/brainrot-survivors/black-warrior-idle.png',
-  '/brainrot-survivors/red-lancer-idle.png', 
-  '/brainrot-survivors/yellow-monk-idle.png',
-  '/brainrot-survivors/zombie-male-walk.png',
-  '/brainrot-survivors/zombie-female-walk.png',
-  '/brainrot-survivors/black-warrior-run.png',
-  '/brainrot-survivors/red-lancer-run.png',
-  '/brainrot-survivors/yellow-monk-run.png'
+  '/brainrot-bosses/zombie-male-idle.png',
+  '/brainrot-bosses/zombie-female-idle.png',
+  '/brainrot-bosses/black-warrior-idle.png',
+  '/brainrot-bosses/red-lancer-idle.png', 
+  '/brainrot-bosses/yellow-monk-idle.png',
+  '/brainrot-bosses/zombie-male-walk.png',
+  '/brainrot-bosses/zombie-female-walk.png',
+  '/brainrot-bosses/black-warrior-run.png',
+  '/brainrot-bosses/red-lancer-run.png',
+  '/brainrot-bosses/yellow-monk-run.png'
 ];
 
 // Install event - cache essential files
@@ -114,7 +114,7 @@ self.addEventListener('fetch', event => {
         
         // Provide offline fallback for HTML pages
         if (request.destination === 'document') {
-          return caches.match('/brainrot-survivors/index.html');
+          return caches.match('/brainrot-bosses/index.html');
         }
         
         // For other assets, just return the error
@@ -141,14 +141,14 @@ self.addEventListener('push', event => {
   if (event.data) {
     const options = {
       body: event.data.text(),
-      icon: '/brainrot-survivors/patapim.png',
-      badge: '/brainrot-survivors/patapim.png',
+      icon: '/brainrot-bosses/patapim.png',
+      badge: '/brainrot-bosses/patapim.png',
       tag: 'kick-brawler-notification',
       actions: [
         {
           action: 'play',
           title: '🥋 Play Now',
-          icon: '/brainrot-survivors/patapim.png'
+          icon: '/brainrot-bosses/patapim.png'
         }
       ]
     };
@@ -165,7 +165,7 @@ self.addEventListener('notificationclick', event => {
   
   if (event.action === 'play') {
     event.waitUntil(
-      clients.openWindow('/brainrot-survivors/')
+      clients.openWindow('/brainrot-bosses/')
     );
   }
 });
