@@ -99,10 +99,8 @@ export class KickableObject {
   constructor(scene: Scene, x: number, y: number, objectType: ObjectType) {
     this.config = KickableObject.OBJECT_CONFIGS[objectType];
     
-    // Create sprite - for now use placeholder sprites from existing assets
-    const spriteKey = this.getPlaceholderSprite(objectType);
-    this.sprite = scene.add.sprite(x, y, spriteKey, 0);
-    this.sprite.setScale(this.config.scale);
+    // Create proper object graphics instead of confusing enemy sprites
+    this.sprite = this.createObjectGraphics(scene, x, y, objectType);
     this.sprite.setDepth(5); // Between ground and enemies
     
     // Initialize properties
@@ -121,38 +119,136 @@ export class KickableObject {
     this.applyObjectStyling();
   }
 
-  private getPlaceholderSprite(objectType: ObjectType): string {
-    // Use existing sprites as placeholders until we have proper object sprites
+  private createObjectGraphics(scene: Scene, x: number, y: number, objectType: ObjectType): GameObjects.Sprite {
+    // Create proper object graphics instead of confusing enemy sprites
+    const graphics = scene.add.graphics();
+    graphics.setPosition(x, y);
+    
     switch (objectType) {
       case ObjectType.BARREL:
-        return 'zombie-male-idle'; // Brown-ish sprite
+        this.drawBarrel(graphics);
+        break;
       case ObjectType.BOX:
-        return 'yellow-monk-idle'; // Yellow box-like
+        this.drawBox(graphics);
+        break;
       case ObjectType.STONE:
-        return 'black-warrior-idle'; // Dark gray stone
+        this.drawStone(graphics);
+        break;
       case ObjectType.LOG:
-        return 'red-lancer-idle'; // Brown log-like
-      default:
-        return 'zombie-male-idle';
+        this.drawLog(graphics);
+        break;
     }
+    
+    // Convert graphics to texture and create sprite
+    const textureKey = `object-${objectType}-${Date.now()}`;
+    graphics.generateTexture(textureKey, 64, 64);
+    graphics.destroy(); // Clean up the temporary graphics
+    
+    const sprite = scene.add.sprite(x, y, textureKey);
+    sprite.setScale(this.config.scale);
+    return sprite;
+  }
+
+  private drawBarrel(graphics: GameObjects.Graphics): void {
+    // Draw a brown barrel with metal bands
+    graphics.fillStyle(0x8B4513); // Saddle brown
+    graphics.fillEllipse(0, 0, 32, 40); // Main barrel body
+    
+    // Metal bands
+    graphics.fillStyle(0x666666); // Dark gray
+    graphics.fillRect(-16, -10, 32, 3); // Top band
+    graphics.fillRect(-16, 0, 32, 3);   // Middle band
+    graphics.fillRect(-16, 10, 32, 3);  // Bottom band
+    
+    // Barrel top
+    graphics.fillStyle(0xA0522D); // Sienna brown (darker)
+    graphics.fillEllipse(0, -20, 30, 8);
+  }
+
+  private drawBox(graphics: GameObjects.Graphics): void {
+    // Draw a wooden crate with planks
+    graphics.fillStyle(0xDEB887); // Burlywood
+    graphics.fillRect(-16, -16, 32, 32); // Main box
+    
+    // Wood planks (darker lines)
+    graphics.lineStyle(1, 0xCD853F); // Peru brown
+    graphics.lineBetween(-16, -8, 16, -8);  // Horizontal plank line
+    graphics.lineBetween(-16, 0, 16, 0);    // Middle line
+    graphics.lineBetween(-16, 8, 16, 8);    // Bottom line
+    graphics.lineBetween(-8, -16, -8, 16);  // Vertical plank line
+    graphics.lineBetween(8, -16, 8, 16);    // Right line
+    
+    // Corner reinforcements
+    graphics.fillStyle(0x654321); // Dark brown
+    graphics.fillRect(-18, -18, 4, 4); // Top-left corner
+    graphics.fillRect(14, -18, 4, 4);  // Top-right corner
+    graphics.fillRect(-18, 14, 4, 4);  // Bottom-left corner
+    graphics.fillRect(14, 14, 4, 4);   // Bottom-right corner
+  }
+
+  private drawStone(graphics: GameObjects.Graphics): void {
+    // Draw a gray stone with rough edges
+    graphics.fillStyle(0x696969); // Dim gray
+    
+    // Create irregular stone shape
+    const points = [
+      { x: -12, y: -15 },
+      { x: 8, y: -18 },
+      { x: 15, y: -8 },
+      { x: 18, y: 5 },
+      { x: 10, y: 16 },
+      { x: -8, y: 18 },
+      { x: -16, y: 8 },
+      { x: -18, y: -5 }
+    ];
+    
+    graphics.fillPoints(points, true);
+    
+    // Add texture with darker spots
+    graphics.fillStyle(0x555555); // Darker gray
+    graphics.fillCircle(-5, -8, 3);
+    graphics.fillCircle(6, 2, 2);
+    graphics.fillCircle(-8, 6, 2);
+    graphics.fillCircle(8, -10, 1);
+    
+    // Add lighter highlights
+    graphics.fillStyle(0x808080); // Light gray
+    graphics.fillCircle(-10, -2, 2);
+    graphics.fillCircle(4, -6, 1);
+    graphics.fillCircle(10, 8, 1);
+  }
+
+  private drawLog(graphics: GameObjects.Graphics): void {
+    // Draw a brown log with wood grain
+    graphics.fillStyle(0xA0522D); // Sienna brown
+    graphics.fillRect(-20, -8, 40, 16); // Main log body (horizontal)
+    
+    // Rounded ends
+    graphics.fillCircle(-20, 0, 8); // Left end
+    graphics.fillCircle(20, 0, 8);  // Right end
+    
+    // Wood grain lines
+    graphics.lineStyle(1, 0x8B4513); // Saddle brown (darker)
+    graphics.lineBetween(-20, -4, 20, -4); // Top grain line
+    graphics.lineBetween(-20, 0, 20, 0);   // Middle grain line
+    graphics.lineBetween(-20, 4, 20, 4);   // Bottom grain line
+    
+    // Wood rings on ends
+    graphics.lineStyle(1, 0x654321); // Dark brown
+    graphics.strokeCircle(-20, 0, 4); // Left end rings
+    graphics.strokeCircle(-20, 0, 6);
+    graphics.strokeCircle(20, 0, 4);  // Right end rings
+    graphics.strokeCircle(20, 0, 6);
+    
+    // Bark texture on top
+    graphics.fillStyle(0x654321); // Dark brown
+    graphics.fillRect(-18, -8, 36, 2); // Top bark strip
   }
 
   private applyObjectStyling(): void {
-    // Apply tints to differentiate object types
-    switch (this.config.type) {
-      case ObjectType.BARREL:
-        this.sprite.setTint(0x8B4513); // Saddle brown
-        break;
-      case ObjectType.BOX:
-        this.sprite.setTint(0xDEB887); // Burlywood
-        break;
-      case ObjectType.STONE:
-        this.sprite.setTint(0x696969); // Dim gray
-        break;
-      case ObjectType.LOG:
-        this.sprite.setTint(0xA0522D); // Sienna brown
-        break;
-    }
+    // Objects now have proper graphics, so no additional styling needed
+    // Colors and appearance are built into the graphics themselves
+    // This method is kept for potential future styling effects
   }
 
   // Method to be called by weapon system when player kicks the object
@@ -170,11 +266,12 @@ export class KickableObject {
     // Add rotation when kicked
     this.rotationSpeed = (Math.random() - 0.5) * 0.2; // Random spin
     
-    // Visual feedback
-    this.sprite.setTint(0xFFFFFF); // Flash white briefly
+    // Visual feedback - scale up briefly when kicked
+    const originalScale = this.sprite.scaleX;
+    this.sprite.setScale(originalScale * 1.2);
     this.sprite.scene.time.delayedCall(100, () => {
       if (!this.isBroken) {
-        this.applyObjectStyling(); // Restore original tint
+        this.sprite.setScale(originalScale); // Restore original scale
       }
     });
     
@@ -217,12 +314,16 @@ export class KickableObject {
     
     this.health -= amount;
     
-    // Visual damage feedback
-    this.sprite.setTint(0xFF6666); // Red tint
-    this.sprite.scene.time.delayedCall(150, () => {
-      if (!this.isBroken) {
-        this.applyObjectStyling();
-      }
+    // Visual damage feedback - brief red flash overlay
+    const scene = this.sprite.scene;
+    const redFlash = scene.add.graphics();
+    redFlash.setPosition(this.sprite.x, this.sprite.y);
+    redFlash.fillStyle(0xFF0000, 0.5);
+    redFlash.fillCircle(0, 0, 20);
+    redFlash.setDepth(this.sprite.depth + 1);
+    
+    scene.time.delayedCall(150, () => {
+      redFlash.destroy();
     });
     
     if (this.health <= 0) {
@@ -492,8 +593,6 @@ export class KickableObject {
       this.trailGraphics.clear();
       this.trailGraphics.setVisible(false);
     }
-    
-    this.applyObjectStyling(); // Restore original appearance
   }
 
   destroy(): void {
