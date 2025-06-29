@@ -2,6 +2,7 @@ import { GameObjects, Scene } from 'phaser';
 import { GameConfig } from '../config/game';
 import { Vector2 } from '../utils/Vector2';
 import { VirtualJoystick } from '../mobile/VirtualJoystick';
+import { CharacterManager, Character } from './Character';
 
 export class Player {
   public sprite: GameObjects.Sprite;
@@ -12,6 +13,8 @@ export class Player {
   public experience: number = 0;
   public level: number = 1;
   public experienceToNext: number;
+  // Character system
+  public currentCharacter: Character;
   
   private keys: any;
   private lastDamageTime: number = 0;
@@ -32,14 +35,18 @@ export class Player {
   private attackAnimationDuration: number = 300; // ms
 
   constructor(scene: Scene, x: number, y: number) {
-    // Create player as animated sprite
-    this.sprite = scene.add.sprite(x, y, 'patapim-idle', 0);
-    this.sprite.setScale(0.4); // Scale down from 192x192 to ~77x77 (larger than zombies)
+    // Get current character from CharacterManager
+    const characterManager = CharacterManager.getInstance();
+    this.currentCharacter = characterManager.getCurrentCharacter();
+    
+    // Create player sprite based on current character
+    this.sprite = scene.add.sprite(x, y, this.currentCharacter.config.spriteKey, 0);
+    this.sprite.setScale(0.4); // Scale down to appropriate size
     this.sprite.setDepth(GameConfig.player.depth);
     
-    // Create animations
-    this.createPatapimAnimations(scene);
-    this.sprite.play('patapim-idle-anim');
+    // Create animations for current character
+    this.createCharacterAnimations(scene);
+    this.sprite.play(`${this.currentCharacter.config.id}-idle-anim`);
     
     this.health = GameConfig.player.maxHealth;
     this.maxHealth = GameConfig.player.maxHealth;
@@ -195,43 +202,84 @@ export class Player {
     return this.experience / this.experienceToNext;
   }
 
-  private createPatapimAnimations(scene: Scene): void {
+  private createCharacterAnimations(scene: Scene): void {
+    const characterId = this.currentCharacter.config.id;
+    
+    // Animation configurations per character
+    const animConfigs: { [key: string]: any } = {
+      'br-br-patapim': {
+        idle: { sprite: 'patapim-idle', frames: 8, frameRate: 6 },
+        run: { sprite: 'patapim-run', frames: 6, frameRate: 10 },
+        attack: { sprite: 'patapim-attack', frames: 4, frameRate: 12 }
+      },
+      'chimpanzini-bananini': {
+        idle: { sprite: 'zombie-male-idle', frames: 15, frameRate: 4 },
+        run: { sprite: 'zombie-male-walk', frames: 10, frameRate: 8 },
+        attack: { sprite: 'zombie-male-attack', frames: 8, frameRate: 10 }
+      },
+      'bombardiro-crocodilo': {
+        idle: { sprite: 'black-warrior-idle', frames: 8, frameRate: 3 },
+        run: { sprite: 'black-warrior-run', frames: 8, frameRate: 6 },
+        attack: { sprite: 'black-warrior-idle', frames: 8, frameRate: 8 } // Use idle for attack
+      },
+      'tralalero-tralala': {
+        idle: { sprite: 'red-lancer-idle', frames: 12, frameRate: 4 },
+        run: { sprite: 'red-lancer-run', frames: 12, frameRate: 8 },
+        attack: { sprite: 'red-lancer-idle', frames: 12, frameRate: 10 }
+      },
+      'cappuccino-assassino': {
+        idle: { sprite: 'yellow-monk-idle', frames: 6, frameRate: 5 },
+        run: { sprite: 'yellow-monk-run', frames: 6, frameRate: 12 },
+        attack: { sprite: 'yellow-monk-idle', frames: 6, frameRate: 15 }
+      },
+      'lirili-larila': {
+        idle: { sprite: 'zombie-female-idle', frames: 15, frameRate: 3 },
+        run: { sprite: 'zombie-female-walk', frames: 10, frameRate: 7 },
+        attack: { sprite: 'zombie-female-attack', frames: 8, frameRate: 9 }
+      }
+    };
+    
+    const config = animConfigs[characterId] || animConfigs['br-br-patapim']; // Fallback to default
+    
     // Create idle animation
-    if (!scene.anims.exists('patapim-idle-anim')) {
+    const idleKey = `${characterId}-idle-anim`;
+    if (!scene.anims.exists(idleKey)) {
       scene.anims.create({
-        key: 'patapim-idle-anim',
-        frames: scene.anims.generateFrameNumbers('patapim-idle', { 
+        key: idleKey,
+        frames: scene.anims.generateFrameNumbers(config.idle.sprite, { 
           start: 0, 
-          end: 7  // 8 frames (0-7)
+          end: config.idle.frames - 1
         }),
-        frameRate: 6, // Slower for idle
+        frameRate: config.idle.frameRate,
         repeat: -1
       });
     }
     
     // Create run animation
-    if (!scene.anims.exists('patapim-run-anim')) {
+    const runKey = `${characterId}-run-anim`;
+    if (!scene.anims.exists(runKey)) {
       scene.anims.create({
-        key: 'patapim-run-anim',
-        frames: scene.anims.generateFrameNumbers('patapim-run', { 
+        key: runKey,
+        frames: scene.anims.generateFrameNumbers(config.run.sprite, { 
           start: 0, 
-          end: 5  // 6 frames (0-5)
+          end: config.run.frames - 1
         }),
-        frameRate: 10, // Faster for running
+        frameRate: config.run.frameRate,
         repeat: -1
       });
     }
     
     // Create attack animation
-    if (!scene.anims.exists('patapim-attack-anim')) {
+    const attackKey = `${characterId}-attack-anim`;
+    if (!scene.anims.exists(attackKey)) {
       scene.anims.create({
-        key: 'patapim-attack-anim',
-        frames: scene.anims.generateFrameNumbers('patapim-attack', { 
+        key: attackKey,
+        frames: scene.anims.generateFrameNumbers(config.attack.sprite, { 
           start: 0, 
-          end: 3  // 4 frames (0-3)
+          end: config.attack.frames - 1
         }),
-        frameRate: 12, // Fast for attack
-        repeat: 0 // Play once, don't loop
+        frameRate: config.attack.frameRate,
+        repeat: 0 // Play once
       });
     }
   }
@@ -251,14 +299,18 @@ export class Player {
       return;
     }
     
-    // Switch between idle and running animations
+    // Switch between idle and running animations using character-specific keys
+    const characterId = this.currentCharacter.config.id;
+    const idleKey = `${characterId}-idle-anim`;
+    const runKey = `${characterId}-run-anim`;
+    
     if (this.isMoving) {
-      if (this.sprite.anims.currentAnim?.key !== 'patapim-run-anim') {
-        this.sprite.play('patapim-run-anim');
+      if (this.sprite.anims.currentAnim?.key !== runKey) {
+        this.sprite.play(runKey);
       }
     } else {
-      if (this.sprite.anims.currentAnim?.key !== 'patapim-idle-anim') {
-        this.sprite.play('patapim-idle-anim');
+      if (this.sprite.anims.currentAnim?.key !== idleKey) {
+        this.sprite.play(idleKey);
       }
     }
   }
@@ -302,6 +354,62 @@ export class Player {
     });
   }
   
+  // Character ability methods
+  getKickForce(): number {
+    return this.currentCharacter.getKickForce();
+  }
+
+  getKickSpeed(): number {
+    return this.currentCharacter.getKickSpeed();
+  }
+
+  getKickRange(): number {
+    return this.currentCharacter.getKickRange();
+  }
+
+  canUseCharacterAbility(abilityId: string): boolean {
+    return this.currentCharacter.canUseAbility(abilityId);
+  }
+
+  useCharacterAbility(abilityId: string): any {
+    return this.currentCharacter.useAbility(abilityId);
+  }
+
+  getCharacterAbilities(): any[] {
+    return this.currentCharacter.config.specialAbilities;
+  }
+
+  getCharacterName(): string {
+    return this.currentCharacter.config.name;
+  }
+
+  getCharacterTitle(): string {
+    return this.currentCharacter.config.title;
+  }
+
+  // Method to switch characters (for character selection screen)
+  switchCharacter(characterId: string): boolean {
+    const characterManager = CharacterManager.getInstance();
+    const success = characterManager.setCurrentCharacter(characterId);
+    
+    if (success) {
+      this.currentCharacter = characterManager.getCurrentCharacter();
+      
+      // Update sprite and animations
+      this.sprite.setTexture(this.currentCharacter.config.spriteKey, 0);
+      
+      // Create new animations for the character
+      this.createCharacterAnimations(this.sprite.scene);
+      
+      // Start with idle animation
+      this.sprite.play(`${this.currentCharacter.config.id}-idle-anim`);
+      
+      console.log(`Switched to ${this.currentCharacter.config.name}`);
+    }
+    
+    return success;
+  }
+
   destroy(): void {
     this.afterimagePool.forEach(afterimage => afterimage.destroy());
     this.afterimagePool = [];

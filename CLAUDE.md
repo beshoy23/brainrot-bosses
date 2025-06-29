@@ -1,9 +1,9 @@
-# Brainrot Survivors Project Documentation
+# Brainrot Bosses Project Documentation
 
 ## Project Overview
-A physics-based brawler game where players kick enemies into devastating chain reactions. **This is NOT a Vampire Survivors clone** - it's a unique physics combat experience built around knockback mechanics and enemy collision chains.
+A physics-based brawler game where players kick enemies into devastating chain reactions, now evolved with epic boss battles. **This is NOT a Vampire Survivors clone** - it's a unique physics combat experience built around knockback mechanics and enemy collision chains, enhanced with challenging boss encounters.
 
-**Play the game**: https://beshoy23.github.io/brainrot-survivors/
+**Play the game**: https://beshoy23.github.io/brainrot-bosses/
 
 *Automatically deploys on every push to master via GitHub Actions*
 
@@ -143,7 +143,7 @@ src/
 - **GitHub Actions**: Automatic build and deploy on every push to master
 - **Asset Management**: All sprites and assets automatically included in builds
 - **Zero Manual Steps**: No need for manual deployment or asset synchronization
-- **Live Updates**: Changes appear at https://beshoy23.github.io/brainrot-survivors/ within minutes
+- **Live Updates**: Changes appear at https://beshoy23.github.io/brainrot-bosses/ within minutes
 
 ### Build Configuration
 - **Vite Build Tool**: Optimized production builds with asset bundling

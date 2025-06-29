@@ -20,7 +20,7 @@ export class Enemy {
   public get x(): number { return this.sprite.x; }
   public get y(): number { return this.sprite.y; }
   public get radius(): number { return this.hitboxRadius; }
-  public movementType: 'homing' | 'straight'; // VS-style: swarm moves straight, others home
+  public movementType: 'homing' | 'straight' | 'stationary' | 'patrol'; // Extended for zone-based encounters
   public movementAngle: number; // For straight-line movement
   public spawnTime: number; // Track when spawned for despawning
   public isDying: boolean = false; // Track if enemy is playing death animation
@@ -493,42 +493,57 @@ export class Enemy {
     let moveX = 0;
     let moveY = 0;
     
-    if (this.movementType === 'straight') {
-      // VS-style straight-line movement for swarm enemies
-      moveX = Math.cos(this.movementAngle) * this.speed * deltaTime / 1000;
-      moveY = Math.sin(this.movementAngle) * this.speed * deltaTime / 1000;
-      
-      this.velocity.x = moveX * 1000 / deltaTime;
-      this.velocity.y = moveY * 1000 / deltaTime;
-      
-      // Move in straight line regardless of player position
-      this.sprite.x += moveX;
-      this.sprite.y += moveY;
-    } else {
-      // Homing behavior for other enemy types
-      const dx = playerPos.x - this.sprite.x;
-      const dy = playerPos.y - this.sprite.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // Stop at collision distance to prevent overlap with player
-      const stopDistance = GameConfig.player.hitboxRadius + this.hitboxRadius - 2;
-      
-      if (distance > stopDistance) {
-        // Normalize and apply speed toward player
-        moveX = (dx / distance) * this.speed * deltaTime / 1000;
-        moveY = (dy / distance) * this.speed * deltaTime / 1000;
+    switch (this.movementType) {
+      case 'straight':
+        // VS-style straight-line movement for swarm enemies
+        moveX = Math.cos(this.movementAngle) * this.speed * deltaTime / 1000;
+        moveY = Math.sin(this.movementAngle) * this.speed * deltaTime / 1000;
         
         this.velocity.x = moveX * 1000 / deltaTime;
         this.velocity.y = moveY * 1000 / deltaTime;
         
-        // Update position directly - enemies can overlap each other like VS
+        // Move in straight line regardless of player position
         this.sprite.x += moveX;
         this.sprite.y += moveY;
-      } else {
-        // Stop at player collision boundary
+        break;
+        
+      case 'homing':
+        // Homing behavior for aggroed enemies
+        const dx = playerPos.x - this.sprite.x;
+        const dy = playerPos.y - this.sprite.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Stop at collision distance to prevent overlap with player
+        const stopDistance = GameConfig.player.hitboxRadius + this.hitboxRadius - 2;
+        
+        if (distance > stopDistance) {
+          // Normalize and apply speed toward player
+          moveX = (dx / distance) * this.speed * deltaTime / 1000;
+          moveY = (dy / distance) * this.speed * deltaTime / 1000;
+          
+          this.velocity.x = moveX * 1000 / deltaTime;
+          this.velocity.y = moveY * 1000 / deltaTime;
+          
+          // Update position directly - enemies can overlap each other like VS
+          this.sprite.x += moveX;
+          this.sprite.y += moveY;
+        } else {
+          // Stop at player collision boundary
+          this.velocity.x = 0;
+          this.velocity.y = 0;
+        }
+        break;
+        
+      case 'stationary':
+        // Stationary enemies don't move (unless knocked back)
         this.velocity.x = 0;
         this.velocity.y = 0;
-      }
+        break;
+        
+      case 'patrol':
+        // Patrol movement is handled by EncounterSystem
+        // EncounterSystem directly updates position for patrol
+        break;
     }
     
     // Update animations and facing direction
@@ -634,6 +649,7 @@ export class Enemy {
     this.isDying = false; // Reset death state
     this.sprite.setScale(1); // Reset scale
     this.sprite.setAlpha(1); // Reset alpha for medieval warriors
+    this.sprite.clearTint(); // Clear any aggro tints
     
     // Reset knockback and trail
     this.knockbackVelocity.set(0, 0);
@@ -643,6 +659,14 @@ export class Enemy {
       this.trailGraphics.clear();
       this.trailGraphics.setVisible(false);
     }
+    
+    // Reset aggro/zone properties
+    (this as any).aggroRadius = undefined;
+    (this as any).currentState = undefined;
+    (this as any).originalPosition = undefined;
+    (this as any).patrolPath = undefined;
+    (this as any).patrolIndex = 0;
+    (this as any).hasAggro = false;
     
     // Reset variations
     this.variations = {

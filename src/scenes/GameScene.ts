@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
 import { Player } from '../entities/Player';
 import { MovementSystem } from '../systems/MovementSystem';
-import { SpawnSystem } from '../systems/SpawnSystem';
+import { EncounterSystem } from '../systems/EncounterSystem';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { WeaponSystem } from '../systems/WeaponSystem';
 import { PickupSystem } from '../systems/PickupSystem';
@@ -25,7 +25,7 @@ import { WeaponBalanceTester } from '../tests/WeaponBalanceTest';
 export class GameScene extends Scene {
   private player!: Player;
   private movementSystem!: MovementSystem;
-  private spawnSystem!: SpawnSystem;
+  private encounterSystem!: EncounterSystem;
   private collisionSystem!: CollisionSystem;
   private weaponSystem!: WeaponSystem;
   private pickupSystem!: PickupSystem;
@@ -179,7 +179,7 @@ export class GameScene extends Scene {
     
     // Initialize systems with larger world
     this.movementSystem = new MovementSystem();
-    this.spawnSystem = new SpawnSystem(this);
+    this.encounterSystem = new EncounterSystem(this);
     this.collisionSystem = new CollisionSystem(worldWidth, worldHeight);
     this.weaponSystem = new WeaponSystem(this);
     this.pickupSystem = new PickupSystem(this);
@@ -233,6 +233,9 @@ export class GameScene extends Scene {
       worldWidth + margin * 2, 
       worldHeight + margin * 2
     );
+    
+    // Load initial zone (Tutorial Grove)
+    this.encounterSystem.loadZone('tutorial-grove');
     
     // Create UI (but not pause button yet)
     this.createUI();
@@ -658,7 +661,8 @@ export class GameScene extends Scene {
       const y = playerPos.y + Math.sin(angle) * distance;
       
       // Manually spawn enemy using spawn system
-      const enemy = this.spawnSystem.spawnEnemyAt(x, y, basicEnemyType);
+      // Note: Manual enemy spawning no longer needed with zone-based encounters
+      // const enemy = this.encounterSystem.spawnEnemyAt(x, y, basicEnemyType);
     }
   }
   
@@ -691,9 +695,9 @@ export class GameScene extends Scene {
     this.updateUI();
     
     // Update systems
-    const enemies = this.spawnSystem.getActiveEnemies();
+    const enemies = this.encounterSystem.getActiveEnemies();
     this.movementSystem.update(delta, this.player, enemies);
-    this.spawnSystem.update(this.survivalTime, this.player.getPosition());
+    this.encounterSystem.update(this.survivalTime, this.player.getPosition());
     this.collisionSystem.update(this.accumulatedTime, this.player, enemies);
     this.weaponSystem.update(delta, this.accumulatedTime, this.player, enemies);
     this.weaponEffectSystem.update(delta, this.player);
@@ -1005,7 +1009,7 @@ export class GameScene extends Scene {
       enemiesKilled: this.enemiesKilled,
       totalXP: this.totalXP,
       damageDealt: this.damageDealt,
-      activeEnemies: this.spawnSystem.getActiveEnemies().length
+      activeEnemies: this.encounterSystem.getActiveEnemies().length
     };
     
     // Launch pause scene
