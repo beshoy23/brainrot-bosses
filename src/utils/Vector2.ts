@@ -53,4 +53,10 @@ export class Vector2 {
   clone(): Vector2 {
     return new Vector2(this.x, this.y);
   }
+
+  static distance(a: Vector2, b: Vector2): number {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
 }

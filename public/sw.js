@@ -8,7 +8,6 @@ const STATIC_CACHE_NAME = 'kick-brawler-static-v1';
 const ESSENTIAL_FILES = [
   '/brainrot-bosses/',
   '/brainrot-bosses/index.html',
-  '/brainrot-bosses/src/main.ts',
   '/brainrot-bosses/patapim.png',
   '/brainrot-bosses/patapim-idle.png', 
   '/brainrot-bosses/patapim-run.png',
@@ -20,14 +19,16 @@ const ESSENTIAL_FILES = [
 const GAME_ASSETS = [
   '/brainrot-bosses/zombie-male-idle.png',
   '/brainrot-bosses/zombie-female-idle.png',
-  '/brainrot-bosses/black-warrior-idle.png',
-  '/brainrot-bosses/red-lancer-idle.png', 
-  '/brainrot-bosses/yellow-monk-idle.png',
+  '/brainrot-bosses/enemies/black-warrior-idle.png',
+  '/brainrot-bosses/enemies/red-lancer-idle.png', 
+  '/brainrot-bosses/enemies/yellow-monk-idle.png',
   '/brainrot-bosses/zombie-male-walk.png',
   '/brainrot-bosses/zombie-female-walk.png',
-  '/brainrot-bosses/black-warrior-run.png',
-  '/brainrot-bosses/red-lancer-run.png',
-  '/brainrot-bosses/yellow-monk-run.png'
+  '/brainrot-bosses/enemies/black-warrior-run.png',
+  '/brainrot-bosses/enemies/red-lancer-run.png',
+  '/brainrot-bosses/enemies/yellow-monk-run.png',
+  '/brainrot-bosses/warrior-idle.png',
+  '/brainrot-bosses/warrior-run.png'
 ];
 
 // Install event - cache essential files
