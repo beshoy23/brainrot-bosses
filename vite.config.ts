@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
-export default defineConfig({
-  base: '/brainrot-bosses/', // GitHub Pages base path
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/brainrot-bosses/' : '/', // Only use base path in production
   build: {
     assetsInlineLimit: 0,
     outDir: 'dist'
@@ -10,4 +10,4 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
-});
+}));

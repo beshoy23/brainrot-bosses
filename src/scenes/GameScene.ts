@@ -697,7 +697,7 @@ export class GameScene extends Scene {
     // Update systems
     const enemies = this.encounterSystem.getActiveEnemies();
     this.movementSystem.update(delta, this.player, enemies);
-    this.encounterSystem.update(this.survivalTime, this.player.getPosition());
+    this.encounterSystem.update(delta, this.player.getPosition());
     this.collisionSystem.update(this.accumulatedTime, this.player, enemies);
     this.weaponSystem.update(delta, this.accumulatedTime, this.player, enemies);
     this.weaponEffectSystem.update(delta, this.player);
