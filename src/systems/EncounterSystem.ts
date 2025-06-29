@@ -229,6 +229,8 @@ export class EncounterSystem {
     
     // Spawn stationary enemies
     zone.enemies.forEach((enemyConfig, index) => {
+      console.log(`🧟 Spawning enemy ${index}: ${enemyConfig.enemyType} at (${enemyConfig.position.x}, ${enemyConfig.position.y})`);
+      
       const enemy = this.enemyPool.acquire();
       const enemyType = ENEMY_TYPES[enemyConfig.enemyType];
       
@@ -321,8 +323,36 @@ export class EncounterSystem {
     // Only update regular enemies if not in boss fight
     if (!this.isBossFight) {
       // Update each enemy's aggro state
-      this.currentZone.enemies.forEach(enemyConfig => {
-        if (!enemyConfig.enemy || !enemyConfig.enemy.sprite.active) return;
+      this.currentZone.enemies.forEach((enemyConfig, index) => {
+        if (!enemyConfig.enemy || !enemyConfig.enemy.sprite.active) {
+          // Respawn enemy if it got deactivated somehow
+          const enemy = this.enemyPool.acquire();
+          const enemyType = ENEMY_TYPES[enemyConfig.enemyType];
+          
+          // Restore enemy properties
+          (enemy as any).aggroRadius = enemyConfig.aggroRadius;
+          (enemy as any).currentState = enemyConfig.state;
+          (enemy as any).originalPosition = enemyConfig.position.clone();
+          (enemy as any).patrolPath = enemyConfig.patrolPath;
+          (enemy as any).patrolIndex = 0;
+          (enemy as any).hasAggro = false;
+          
+          // Respawn at original position
+          enemy.spawn(enemyConfig.position.x, enemyConfig.position.y, enemyType);
+          
+          // Override movement type
+          if (enemyConfig.state === EnemyState.STATIONARY) {
+            (enemy as any).movementType = 'stationary';
+          } else if (enemyConfig.state === EnemyState.PATROLLING) {
+            (enemy as any).movementType = 'patrol';
+          }
+          
+          // Update references
+          enemyConfig.enemy = enemy;
+          this.activeEnemies.set(`${this.currentZone.id}-enemy-${index}`, enemy);
+          
+          return;
+        }
 
         this.updateEnemyAggro(enemyConfig, playerPos);
       });
@@ -336,12 +366,31 @@ export class EncounterSystem {
       }
     }
 
-    // Clean up dead enemies
+    // Handle dead zone enemies - respawn them instead of removing them
     const deadEnemies: string[] = [];
     this.activeEnemies.forEach((enemy, key) => {
       if (enemy.sprite.active && enemy.health <= 0 && !enemy.isDying) {
-        this.enemyPool.release(enemy);
-        deadEnemies.push(key);
+        // For zone-based enemies, respawn them instead of removing them
+        const enemyIndex = parseInt(key.split('-').pop() || '0');
+        const enemyConfig = this.currentZone?.enemies[enemyIndex];
+        
+        if (enemyConfig) {
+          // Reset enemy health and position
+          enemy.health = enemy.maxHealth;
+          enemy.sprite.setPosition(enemyConfig.position.x, enemyConfig.position.y);
+          enemy.sprite.clearTint(); // Remove any aggro tint
+          
+          // Reset aggro state
+          (enemy as any).hasAggro = false;
+          enemyConfig.state = enemyConfig.patrolPath ? EnemyState.PATROLLING : EnemyState.STATIONARY;
+          (enemy as any).movementType = enemyConfig.state === EnemyState.PATROLLING ? 'patrol' : 'stationary';
+          (enemy as any).patrolIndex = 0;
+          
+        } else {
+          // If no zone config (shouldn't happen), remove normally
+          this.enemyPool.release(enemy);
+          deadEnemies.push(key);
+        }
       }
     });
     
@@ -370,6 +419,7 @@ export class EncounterSystem {
     
     const aggroRange = enemyConfig.aggroRadius;
     const hasAggro = (enemy as any).hasAggro;
+    
     
     // State transitions
     switch (enemyConfig.state) {
@@ -565,6 +615,7 @@ export class EncounterSystem {
     if (this.currentBoss && this.currentBoss.sprite.active) {
       regularEnemies.push(this.currentBoss);
     }
+    
     
     return regularEnemies;
   }

@@ -335,8 +335,8 @@ export class Enemy {
         return {
           idleTexture: 'red-lancer-idle',
           walkTexture: 'red-lancer-run',
-          idleFrames: 12,
-          walkFrames: 12,
+          idleFrames: 6,
+          walkFrames: 6,
           idleFrameRate: 3,
           walkFrameRate: 8
         };

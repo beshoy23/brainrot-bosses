@@ -174,8 +174,8 @@ export class GameScene extends Scene {
     
     this.createInterestingBackground(worldWidth, worldHeight);
     
-    // Initialize player at center of the larger world
-    this.player = new Player(this, worldWidth / 2, worldHeight / 2);
+    // Initialize player in tutorial grove area (not world center)
+    this.player = new Player(this, 600, 400); // Center of tutorial grove (1200x800)
     
     // Initialize systems with larger world
     this.movementSystem = new MovementSystem();

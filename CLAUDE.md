@@ -5,6 +5,8 @@ A physics-based brawler game where players kick enemies into devastating chain r
 
 **Play the game**: https://beshoy23.github.io/brainrot-bosses/
 
+**Art Assets**: https://zerie.itch.io/tiny-rpg-character-asset-pack
+
 *Automatically deploys on every push to master via GitHub Actions*
 
 ## Core Game Design

@@ -169,7 +169,7 @@ export class Player {
   
   playAttackAnimation(): void {
     this.isAttacking = true;
-    this.sprite.play('patapim-attack-anim');
+    this.sprite.play(`${this.currentCharacter.config.id}-attack-anim`);
     
     // Reset attack state after animation completes
     this.sprite.scene.time.delayedCall(this.attackAnimationDuration, () => {
